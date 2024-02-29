@@ -1,0 +1,30 @@
+{
+  "name": "@metricalp/react-native",
+  "version": "1.0.0",
+  "description": "Metricalp React Native integration library",
+  "main": "dist/index.cjs.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "npm run clean && node build.js && tsc --emitDeclarationOnly --outDir dist",
+    "clean": "rimraf dist",
+    "prepublishOnly": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/metricalp/react-native.git"
+  },
+  "homepage": "https://www.metricalp.com",
+  "author": "Metin Arslanturk",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/react": "^17",
+    "@types/react-dom": "^17",
+    "esbuild": "^0.19.10",
+    "rimraf": "^5.0.5",
+    "typescript": "^5.3.3"
+  },
+  "files": [
+    "dist"
+  ]
+}
