@@ -30,6 +30,7 @@ function sendEvent(type: string, eventAttributes: Record<string, any>) {
       metr_app_detail: attributes.app || '(not-set)',
       metr_user_language: attributes.language || '(not-set)',
       metr_unique_identifier: attributes.uuid || '(not-set)',
+      metr_bypass_ip: attributes.bypassIpUniqueness || false,
       tid: attributes.tid,
     }),
   }).then((response) => {
@@ -40,12 +41,18 @@ function sendEvent(type: string, eventAttributes: Record<string, any>) {
   });
 }
 
-export function screenViewEvent(path: string) {
-  return sendEvent('screen_view', { path });
+export function screenViewEvent(
+  path: string,
+  eventAttributes: Record<string, any> = {}
+) {
+  return sendEvent('screen_view', { path, ...eventAttributes });
 }
 
-export function sessionExitEvent(path: string) {
-  return sendEvent('session_exit', { path });
+export function sessionExitEvent(
+  path: string,
+  eventAttributes: Record<string, any> = {}
+) {
+  return sendEvent('session_exit', { path, ...eventAttributes });
 }
 
 export function customEvent(
@@ -55,7 +62,13 @@ export function customEvent(
   return sendEvent(type, eventAttributes);
 }
 
-export function initMetricalp(attributes: Record<string, any>) {
+export function initMetricalp(
+  attributes: Record<string, any>,
+  skipFirstFire = false
+) {
   SingletonStore.initAttributes(attributes);
+  if (skipFirstFire) {
+    return Promise.resolve(true);
+  }
   return screenViewEvent(attributes.mainScreen);
 }
