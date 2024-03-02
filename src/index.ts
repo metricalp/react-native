@@ -87,7 +87,7 @@ export class Metricalp {
         metr_collected_via: attributes.platform,
         metr_os_detail: attributes.os || '(not-set)',
         metr_app_detail: attributes.app || '(not-set)',
-        metr_user_language: attributes.language || '(not-set)',
+        metr_user_language: attributes.language || 'unknown-unknown',
         metr_unique_identifier: attributes.uuid || '',
         metr_bypass_ip: attributes.bypassIpUniqueness || false,
         tid: attributes.tid,
