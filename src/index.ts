@@ -13,14 +13,14 @@ export class Metricalp {
     return Metricalp.instance;
   }
 
-  public static init(attributes: Record<string, any>, skipFirstFire = false) {
+  public static init(attributes: Record<string, any>, initialScreen: string) {
     const instance = Metricalp.getOrBuildInstance();
     instance.setAttributes(attributes);
-    if (skipFirstFire) {
+    if (!initialScreen) {
       return Promise.resolve(true);
     }
 
-    return Metricalp.screenViewEvent(attributes.mainScreen || 'main');
+    return Metricalp.screenViewEvent(initialScreen || 'main');
   }
 
   public static getInstance() {
@@ -56,9 +56,13 @@ export class Metricalp {
     return instance.getAttributes();
   }
 
-  public static sendEvent(type: string, eventAttributes: Record<string, any>) {
+  public static sendEvent(
+    type: string,
+    eventAttributes: Record<string, any>,
+    overrideAttributes: Record<string, any> = {}
+  ) {
     const instance = Metricalp.getInstance();
-    const attributes = { ...instance.getAttributes(), ...eventAttributes };
+    const attributes = { ...instance.getAttributes(), ...overrideAttributes };
 
     if (!attributes.tid) {
       throw new Error('Metricalp Error: tid not set in Metricalp attributes.');
@@ -82,8 +86,9 @@ export class Metricalp {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        ...eventAttributes,
         type,
-        path: attributes.path || '(not-set)',
+        path: eventAttributes.path || '(not-set)',
         metr_collected_via: attributes.platform,
         metr_os_detail: attributes.os || '(not-set)',
         metr_app_detail: attributes.app || '(not-set)',
@@ -102,22 +107,33 @@ export class Metricalp {
 
   public static screenViewEvent(
     path: string,
-    eventAttributes: Record<string, any> = {}
+    eventAttributes: Record<string, any> = {},
+    overrideAttributes: Record<string, any> = {}
   ) {
-    return Metricalp.sendEvent('screen_view', { path, ...eventAttributes });
+    return Metricalp.sendEvent(
+      'screen_view',
+      { path, ...eventAttributes },
+      overrideAttributes
+    );
   }
 
   public static sessionExitEvent(
     path: string,
-    eventAttributes: Record<string, any> = {}
+    eventAttributes: Record<string, any> = {},
+    overrideAttributes: Record<string, any> = {}
   ) {
-    return Metricalp.sendEvent('session_exit', { path, ...eventAttributes });
+    return Metricalp.sendEvent(
+      'session_exit',
+      { path, ...eventAttributes },
+      overrideAttributes
+    );
   }
 
   public static customEvent(
     type: string,
-    eventAttributes: Record<string, any>
+    eventAttributes: Record<string, any>,
+    overrideAttributes: Record<string, any> = {}
   ) {
-    return Metricalp.sendEvent(type, eventAttributes);
+    return Metricalp.sendEvent(type, eventAttributes, overrideAttributes);
   }
 }
