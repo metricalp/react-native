@@ -1,6 +1,6 @@
 export class Metricalp {
   private static instance: Metricalp;
-  private static API_ENDPOINT = 'https://api.metricalp.com/v1/events';
+  private static API_ENDPOINT = 'https://event.metricalp.com';
   private attributes: Record<string, any> = {};
 
   private constructor() {}
@@ -16,9 +16,11 @@ export class Metricalp {
   public static init(attributes: Record<string, any>, skipFirstFire = false) {
     const instance = Metricalp.getOrBuildInstance();
     instance.setAttributes(attributes);
-    if (!skipFirstFire) {
-      Metricalp.screenViewEvent(attributes.mainScreen || 'main');
+    if (skipFirstFire) {
+      return Promise.resolve(true);
     }
+
+    return Metricalp.screenViewEvent(attributes.mainScreen || 'main');
   }
 
   public static getInstance() {
