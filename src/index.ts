@@ -13,14 +13,18 @@ export class Metricalp {
     return Metricalp.instance;
   }
 
-  public static init(attributes: Record<string, any>, initialScreen: string) {
+  public static init(
+    attributes: Record<string, any>,
+    initialScreen?: string,
+    eventAttributes: Record<string, any> = {}
+  ) {
     const instance = Metricalp.getOrBuildInstance();
     instance.setAttributes(attributes);
     if (!initialScreen) {
       return Promise.resolve(true);
     }
 
-    return Metricalp.screenViewEvent(initialScreen || 'main');
+    return Metricalp.screenViewEvent(initialScreen || 'main', eventAttributes);
   }
 
   public static getInstance() {
