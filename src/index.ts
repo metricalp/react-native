@@ -2,6 +2,8 @@ export class Metricalp {
   private static instance: Metricalp;
   private static API_ENDPOINT = 'https://event.metricalp.com';
   private attributes: Record<string, any> = {};
+  private screenDurationStartPoint = Date.now();
+  private currentScreen = '';
 
   private constructor() {}
 
@@ -42,6 +44,18 @@ export class Metricalp {
 
   public getAttributes() {
     return this.attributes;
+  }
+
+  public getCurrentScreen() {
+    return this.currentScreen;
+  }
+
+  public setCurrentScreen(screen: string) {
+    this.currentScreen = screen;
+  }
+
+  public setScreenDurationStartPointToNow() {
+    this.screenDurationStartPoint = Date.now();
   }
 
   public static resetAttributes(attributes: Record<string, any>) {
@@ -114,13 +128,49 @@ export class Metricalp {
     eventAttributes: Record<string, any> = {},
     overrideAttributes: Record<string, any> = {}
   ) {
+    const instance = Metricalp.getInstance();
+    const prevScreen = instance.getCurrentScreen();
+    let screenLeaveProps = {};
+    if (prevScreen) {
+      screenLeaveProps = {
+        leave_from_path: prevScreen,
+        leave_duration: Date.now() - instance.screenDurationStartPoint,
+      };
+    }
+    instance.setCurrentScreen(path);
+    instance.setScreenDurationStartPointToNow();
     return Metricalp.sendEvent(
       'screen_view',
-      { path, ...eventAttributes },
+      { path, ...screenLeaveProps, ...eventAttributes },
       overrideAttributes
     );
   }
 
+  public static appLeaveEvent(
+    eventAttributes: Record<string, any> = {},
+    overrideAttributes: Record<string, any> = {}
+  ) {
+    const instance = Metricalp.getInstance();
+    const prevPath = instance.getCurrentScreen();
+    // You can not trigger leave event without a screen view event before it
+    if (!prevPath) {
+      return Promise.resolve(false);
+    }
+    const screenDuration = Date.now() - instance.screenDurationStartPoint;
+    instance.setScreenDurationStartPointToNow();
+    instance.setCurrentScreen('');
+    return Metricalp.sendEvent(
+      'screen_leave',
+      {
+        path: prevPath,
+        screen_duration: screenDuration,
+        ...eventAttributes,
+      },
+      overrideAttributes
+    );
+  }
+
+  // @deprecated No more manual session exit event
   public static sessionExitEvent(
     path: string,
     eventAttributes: Record<string, any> = {},
