@@ -1,7 +1,17 @@
+export interface ConfigurationAttributes {
+  tid: string;
+  platform: string;
+  uuid: string;
+  os?: string;
+  app?: string;
+  language?: string;
+  endpoint?: string;
+  bypassIpUniqueness?: boolean;
+}
 export class Metricalp {
   private static instance: Metricalp;
   private static API_ENDPOINT = 'https://event.metricalp.com';
-  private attributes: Record<string, any> = {};
+  private attributes: ConfigurationAttributes | undefined = undefined;
   private screenDurationStartPoint = Date.now();
   private currentScreen = '';
 
@@ -16,7 +26,7 @@ export class Metricalp {
   }
 
   public static init(
-    attributes: Record<string, any>,
+    attributes: ConfigurationAttributes,
     initialScreen?: string,
     eventAttributes: Record<string, any> = {}
   ) {
@@ -26,7 +36,7 @@ export class Metricalp {
       return Promise.resolve(true);
     }
 
-    return Metricalp.screenViewEvent(initialScreen || 'main', eventAttributes);
+    return Metricalp.screenViewEvent(initialScreen, eventAttributes);
   }
 
   public static getInstance() {
@@ -38,7 +48,7 @@ export class Metricalp {
     return Metricalp.instance;
   }
 
-  public setAttributes(attributes: Record<string, any>) {
+  public setAttributes(attributes: ConfigurationAttributes) {
     this.attributes = attributes;
   }
 
@@ -58,12 +68,12 @@ export class Metricalp {
     this.screenDurationStartPoint = Date.now();
   }
 
-  public static resetAttributes(attributes: Record<string, any>) {
+  public static resetAttributes(attributes: ConfigurationAttributes) {
     const instance = Metricalp.getInstance();
     instance.setAttributes(attributes);
   }
 
-  public static updateAttributes(attributes: Record<string, any>) {
+  public static updateAttributes(attributes: ConfigurationAttributes) {
     const instance = Metricalp.getInstance();
     const currentAttributes = instance.getAttributes();
     instance.setAttributes({ ...currentAttributes, ...attributes });
@@ -77,10 +87,13 @@ export class Metricalp {
   public static sendEvent(
     type: string,
     eventAttributes: Record<string, any>,
-    overrideAttributes: Record<string, any> = {}
+    overrideConfigurationAttributes: Partial<ConfigurationAttributes> = {}
   ) {
     const instance = Metricalp.getInstance();
-    const attributes = { ...instance.getAttributes(), ...overrideAttributes };
+    const attributes = {
+      ...instance.getAttributes(),
+      ...overrideConfigurationAttributes,
+    };
 
     if (!attributes.tid) {
       throw new Error('Metricalp Error: tid not set in Metricalp attributes.');
@@ -92,10 +105,8 @@ export class Metricalp {
       );
     }
 
-    if (attributes.bypassIpUniqueness && !attributes.uuid) {
-      throw new Error(
-        'Metricalp Error: when bypassIpUniqueness is true, uuid must be set.'
-      );
+    if (!attributes.uuid) {
+      throw new Error('Metricalp Error: uuid not set in Metricalp attributes.');
     }
 
     return fetch(attributes.endpoint || Metricalp.API_ENDPOINT, {
@@ -107,12 +118,12 @@ export class Metricalp {
         ...eventAttributes,
         type,
         path: eventAttributes.path || '(not-set)',
-        metr_collected_via: attributes.platform,
         metr_os_detail: attributes.os || '(not-set)',
         metr_app_detail: attributes.app || '(not-set)',
         metr_user_language: attributes.language || 'unknown-unknown',
-        metr_unique_identifier: attributes.uuid || '',
-        metr_bypass_ip: attributes.bypassIpUniqueness || false,
+        metr_bypass_ip: attributes.bypassIpUniqueness ?? true,
+        metr_collected_via: attributes.platform,
+        metr_unique_identifier: attributes.uuid,
         tid: attributes.tid,
       }),
     }).then((response) => {
@@ -126,7 +137,7 @@ export class Metricalp {
   public static screenViewEvent(
     path: string,
     eventAttributes: Record<string, any> = {},
-    overrideAttributes: Record<string, any> = {}
+    overrideConfigurationAttributes: Partial<ConfigurationAttributes> = {}
   ) {
     const instance = Metricalp.getInstance();
     const prevScreen = instance.getCurrentScreen();
@@ -142,13 +153,13 @@ export class Metricalp {
     return Metricalp.sendEvent(
       'screen_view',
       { path, ...screenLeaveProps, ...eventAttributes },
-      overrideAttributes
+      overrideConfigurationAttributes
     );
   }
 
   public static appLeaveEvent(
     eventAttributes: Record<string, any> = {},
-    overrideAttributes: Record<string, any> = {}
+    overrideConfigurationAttributes: Partial<ConfigurationAttributes> = {}
   ) {
     const instance = Metricalp.getInstance();
     const prevPath = instance.getCurrentScreen();
@@ -166,7 +177,7 @@ export class Metricalp {
         screen_duration: screenDuration,
         ...eventAttributes,
       },
-      overrideAttributes
+      overrideConfigurationAttributes
     );
   }
 
@@ -174,20 +185,24 @@ export class Metricalp {
   public static sessionExitEvent(
     path: string,
     eventAttributes: Record<string, any> = {},
-    overrideAttributes: Record<string, any> = {}
+    overrideConfigurationAttributes: Partial<ConfigurationAttributes> = {}
   ) {
     return Metricalp.sendEvent(
       'session_exit',
       { path, ...eventAttributes },
-      overrideAttributes
+      overrideConfigurationAttributes
     );
   }
 
   public static customEvent(
     type: string,
     eventAttributes: Record<string, any>,
-    overrideAttributes: Record<string, any> = {}
+    overrideConfigurationAttributes: Partial<ConfigurationAttributes> = {}
   ) {
-    return Metricalp.sendEvent(type, eventAttributes, overrideAttributes);
+    return Metricalp.sendEvent(
+      type,
+      eventAttributes,
+      overrideConfigurationAttributes
+    );
   }
 }
