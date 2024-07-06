@@ -196,7 +196,7 @@ export class Metricalp {
 
   public static customEvent(
     type: string,
-    eventAttributes: Record<string, any>,
+    eventAttributes: Record<string, any> = {},
     overrideConfigurationAttributes: Partial<ConfigurationAttributes> = {}
   ) {
     return Metricalp.sendEvent(
