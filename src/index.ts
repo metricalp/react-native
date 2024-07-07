@@ -145,7 +145,7 @@ export class Metricalp {
     if (prevScreen) {
       screenLeaveProps = {
         leave_from_path: prevScreen,
-        leave_duration: Date.now() - instance.screenDurationStartPoint,
+        leave_from_duration: Date.now() - instance.screenDurationStartPoint,
       };
     }
     instance.setCurrentScreen(path);
