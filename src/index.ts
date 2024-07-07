@@ -6,7 +6,7 @@ export interface ConfigurationAttributes {
   app?: string;
   language?: string;
   endpoint?: string;
-  bypassIpUniqueness?: boolean;
+  bypassIpUniqueness?: 'enable' | 'disable' | boolean;
 }
 export class Metricalp {
   private static instance: Metricalp;
@@ -121,7 +121,11 @@ export class Metricalp {
         metr_os_detail: attributes.os || '(not-set)',
         metr_app_detail: attributes.app || '(not-set)',
         metr_user_language: attributes.language || 'unknown-unknown',
-        metr_bypass_ip: attributes.bypassIpUniqueness ?? true,
+        metr_bypass_ip:
+          attributes.bypassIpUniqueness === 'disable' ||
+          attributes.bypassIpUniqueness === false
+            ? false
+            : true,
         metr_collected_via: attributes.platform,
         metr_unique_identifier: attributes.uuid,
         tid: attributes.tid,
